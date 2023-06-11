@@ -1,6 +1,5 @@
 from selenium import webdriver
 import time
-import requests
 from bs4 import BeautifulSoup
 import re
 import matplotlib.pyplot as plt

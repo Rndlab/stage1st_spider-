@@ -1,7 +1,6 @@
 from selenium import webdriver
 from Liver import liver,secretWord
 import time
-import requests
 from bs4 import BeautifulSoup
 import re
 import matplotlib.pyplot as plt
