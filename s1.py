@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from login import account_name,password
+import os
+import pandas as pd
 
 def get_html(driver, url):
     driver.get(url)
@@ -23,14 +25,16 @@ def get_keyword_count(url, driver):
     for a in soup.find_all('a'): # 剔除三方客户端挂链
         a.decompose()
     tds = soup.find_all("td", class_="t_f") # 获取正文文本列表
-    counts = [0 for _ in range(len(liver))]
+    date = soup.find('div', {'class': 'pti'}).em.text.split()[1]
+    counts = [0 for _ in range(len(liver) + 1)]
+    counts[0] = date
     for td in tds: # 遍历楼层内容
         for i, name in enumerate(liver):
             for keyword in liver[name]:
                 if re.search(rf"\b{keyword}\b" if keyword in secretWord else rf"{keyword}", td.text):
                     print(td.text)
                     print(f"===match {keyword}===")
-                    counts[i]+=1
+                    counts[i + 1]+=1
                     break
     return counts
 
@@ -42,11 +46,12 @@ def login(driver, url): # 登录个人账户
     time.sleep(5)
 
 def addCounts(counts,page_counts):
-    for j in range(len(counts)):
-        if len(counts[j]) == 0:
-            counts[j].append(page_counts[j])
+    for i in range(1,len(counts)):
+        if len(counts[i]) == 1:
+            counts[i].append(page_counts[i])
         else:
-            counts[j].append(counts[j][-1] + page_counts[j])
+            counts[i].append(counts[i][-1] + page_counts[i])
+    counts[0].append(page_counts[0])
     return counts
 
 if __name__ == "__main__":
@@ -65,22 +70,75 @@ if __name__ == "__main__":
     driver = webdriver.Chrome(executable_path="./driver/", options=options)
     login(driver, "https://bbs.saraba1st.com/")
 
-    counts = [[] for _ in range(len(liver))] # 总统计矩阵
+    counts = [[] for _ in range(len(liver) + 1)] # 总统计矩阵
+    counts[0].append('')
+    for i in range(1, len(counts)):
+        counts[i].append(list(liver.keys())[i-1]) # 添加首行表头
+    # b67
+    for i in range(1, 761):
+        print(f'page{i}')
+        url = f"https://bbs.saraba1st.com/2b/thread-2108937-{i}-1.html"
+        page_counts = get_keyword_count(url, driver)
+        counts = addCounts(counts, page_counts)
+    # b68
+    for i in range(1, 11):
+        print(f'page{i}')
+        url = f"https://bbs.saraba1st.com/2b/thread-2112012-{i}-1.html"
+        page_counts = get_keyword_count(url, driver)
+        counts = addCounts(counts, page_counts)
+    # b69
+    for i in range(1, 1190):
+        print(f'page{i}')
+        url = f"https://bbs.saraba1st.com/2b/thread-2112070-{i}-1.html"
+        page_counts = get_keyword_count(url, driver)
+        counts = addCounts(counts, page_counts)
+    # b70
+    for i in range(1, 1278):
+        print(f'page{i}')
+        url = f"https://bbs.saraba1st.com/2b/thread-2115994-{i}-1.html"
+        page_counts = get_keyword_count(url, driver)
+        counts = addCounts(counts, page_counts)
+    # b71
+    for i in range(1, 359):
+        print(f'page{i}')
+        url = f"https://bbs.saraba1st.com/2b/thread-2118910-{i}-1.html"
+        page_counts = get_keyword_count(url, driver)
+        counts = addCounts(counts, page_counts)
+    # b72
+    for i in range(1, 1482):
+        print(f'page{i}')
+        url = f"https://bbs.saraba1st.com/2b/thread-2119861-{i}-1.html"
+        page_counts = get_keyword_count(url, driver)
+        counts = addCounts(counts, page_counts)
+    # b73
+    for i in range(1, 1617):
+        print(f'page{i}')
+        url = f"https://bbs.saraba1st.com/2b/thread-2126250-{i}-1.html"
+        page_counts = get_keyword_count(url, driver)
+        counts = addCounts(counts, page_counts)
     # b74
-    for i in range(1, 50):
+    for i in range(1, 778):
         print(f'page{i}')
         url = f"https://bbs.saraba1st.com/2b/thread-2134542-{i}-1.html"
         page_counts = get_keyword_count(url, driver)
         counts = addCounts(counts, page_counts)
+    # b75
+    # for i in range(1, 10):
+    #     print(f'page{i}')
+    #     url = f"https://bbs.saraba1st.com/2b/thread-2138754-{i}-1.html"
+    #     page_counts = get_keyword_count(url, driver)
+    #     counts = addCounts(counts, page_counts)
 
     # 整理数据
-    pageNum = len(counts[0])
-    for i in range(len(counts)):
-        counts[i].append(list(liver.keys())[i])
-    sorted_counts = sorted(counts, key=lambda x: x[-2], reverse=True) # 排序
+    pageNum = len(counts[0])-1
 
-    for i in range(len(sorted_counts)):
-        if sorted_counts[i][pageNum-1] > 50: # 过滤 n 次出现以上的
-            plt.plot(sorted_counts[i][:-1], label=f"{sorted_counts[i][pageNum]}({sorted_counts[i][pageNum-1]})") # 添加折线
+    # sorted_counts = sorted(counts, key=lambda x: x[-2], reverse=True) # 排序
+
+    df = pd.DataFrame(counts)
+    df.to_csv('liver.csv',encoding='utf_8_sig') # 输出统计表
+    
+    for i in range(1,len(counts)):
+        if counts[i][pageNum] > 3: # 过滤 n 次出现以上的
+            plt.plot(counts[i][1:], label=f"{counts[i][0]}({counts[i][pageNum]})") # 添加折线
     plt.legend()
     plt.show()
