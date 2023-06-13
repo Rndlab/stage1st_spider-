@@ -6,6 +6,7 @@ import re
 import matplotlib.pyplot as plt
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
 from login import account_name,password
 import os
 import pandas as pd
@@ -20,19 +21,23 @@ def get_keyword_count(url, driver):
     soup = BeautifulSoup(html, "html.parser")
     for blockquote in soup.find_all('blockquote'): # 剔除回复引用
         blockquote.decompose()
+    for i in soup.find_all('i', class_="pstatus"):  # 编辑记录
+        i.decompose()
     for ignore in soup.find_all('ignore_js_op'): # 剔除图片标签
         ignore.decompose()
     for a in soup.find_all('a'): # 剔除三方客户端挂链
         a.decompose()
     tds = soup.find_all("td", class_="t_f") # 获取正文文本列表
-    date = soup.find('div', {'class': 'pti'}).em.text.split()[1]
+    try:
+        date = soup.find('div', {'class': 'pti'}).em.text.split()[1] # 获取日期
+    except:
+        date = ''
     counts = [0 for _ in range(len(liver) + 1)]
     counts[0] = date
     for td in tds: # 遍历楼层内容
         for i, name in enumerate(liver):
             for keyword in liver[name]:
                 if re.search(rf"\b{keyword}\b" if keyword in secretWord else rf"{keyword}", td.text):
-                    print(td.text)
                     print(f"===match {keyword}===")
                     counts[i + 1]+=1
                     break
@@ -66,8 +71,9 @@ if __name__ == "__main__":
     }
     options.add_experimental_option('prefs', prefs)
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    options.add_argument('--headless')
-    driver = webdriver.Chrome(executable_path="./driver/", options=options)
+    # options.add_argument('--headless')
+    service = ChromeService(executable_path='./driver/')
+    driver = webdriver.Chrome(options=options, service=service)
     login(driver, "https://bbs.saraba1st.com/")
 
     counts = [[] for _ in range(len(liver) + 1)] # 总统计矩阵
