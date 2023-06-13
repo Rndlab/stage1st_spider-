@@ -7,6 +7,7 @@ import os
 import pandas as pd
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
 from login import account_name,password
 
 def get_html(driver, url):
@@ -54,7 +55,8 @@ if __name__ == "__main__":
     options.add_experimental_option('prefs', prefs)
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     options.add_argument('--headless')
-    driver = webdriver.Chrome(executable_path="D:", options=options)
+    service = ChromeService(executable_path='./driver/')
+    driver = webdriver.Chrome(options=options, service=service)
     login(driver, "https://bbs.saraba1st.com/")
 
     # b74
