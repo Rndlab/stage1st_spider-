@@ -18,3 +18,5 @@ python 3.5+
 需要安装的python库：
 
 pip install selenium,bs4,matplotlib,pandas
+
+selenium需要使用4.10.x+
